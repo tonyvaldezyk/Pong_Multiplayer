@@ -19,6 +19,13 @@ public class PongBall : MonoBehaviour
       }
     } 
 
+    void Awake() {
+      if (!Globals.IsServer) {
+        enabled = false;
+      }
+
+    }
+
     void Start() {
       Direction = new Vector3(
         Random.Range(0.5f, 1),
@@ -35,8 +42,6 @@ public class PongBall : MonoBehaviour
       }
 
       transform.position = transform.position + (Direction * Speed * Time.deltaTime);
-
-      Debug.Log("Position actuelle du ballon : " + transform.position);
     }
 
     void OnCollisionEnter(Collision c) {
@@ -48,9 +53,12 @@ public class PongBall : MonoBehaviour
 
         case "PaddleLeft":
         case "PaddleRight":
+        case "BoundLeft":
+        case "BoundRight":
           Direction.x = -Direction.x;
           break;
 
+        /*
         case "BoundLeft":
           _State = PongBallState.PlayerRightWin;
           break;
@@ -58,6 +66,7 @@ public class PongBall : MonoBehaviour
         case "BoundRight":
           _State = PongBallState.PlayerLeftWin;
           break;
+        */
 
       }
     }

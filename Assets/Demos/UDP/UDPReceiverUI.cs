@@ -1,3 +1,4 @@
+using System.Net;
 using UnityEngine;
 
 public class UDPReceiverUI : MonoBehaviour
@@ -27,7 +28,7 @@ public class UDPReceiverUI : MonoBehaviour
         }
 
         Receiver.ListenPort = port;
-        Receiver.Listen((string message) => {
+        Receiver.Listen((string message, IPEndPoint sender) => {
             TxtMessage.text = message;
         });
         

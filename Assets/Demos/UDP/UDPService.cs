@@ -2,17 +2,16 @@ using UnityEngine;
 using System.Net;
 using System.Net.Sockets;
 
-public class UDPReceiver : MonoBehaviour
+public class UDPService : MonoBehaviour
 {
-    public int ListenPort = 25000;
     UdpClient udp;
     IPEndPoint localEP;
 
     public delegate void UDPMessageReceive(string message, IPEndPoint sender);
 
-    private UDPMessageReceive OnMessageReceive;
+    public event UDPMessageReceive OnMessageReceived;
 
-    public bool Listen(UDPMessageReceive handler) {
+    public bool Listen(int port) {
         if (udp != null) {
             Debug.LogWarning("Socket already initialized! Close it first.");
             return false;
@@ -21,8 +20,7 @@ public class UDPReceiver : MonoBehaviour
         try
         {
             // Local End-Point
-            localEP = new IPEndPoint(IPAddress.Any, ListenPort);
-            
+            localEP = new IPEndPoint(IPAddress.Any, port);
             
             // Create the listener
             udp = new UdpClient();
@@ -30,37 +28,48 @@ public class UDPReceiver : MonoBehaviour
             udp.ExclusiveAddressUse = false;
             udp.Client.Bind(localEP);
 
-            Debug.Log("Server listening on port: " + ListenPort);
+            Debug.Log("Server listening on port: " + port);
 
-            OnMessageReceive = handler;
             return true;
         }
         catch (System.Exception ex)
         {
-            Debug.LogWarning("Error creating UDP listener on port: " + ListenPort + ": " + ex.Message);
+            Debug.LogWarning("Error creating UDP listener on port: " + port + ": " + ex.Message);
             CloseUDP();
             return false;
         }
     }
 
-    public void Close() {
-        CloseUDP();
-    }
-
-    public bool IsListening {
-        get {
-            return (udp != null);
+    public bool InitClient() {
+        if (udp != null) {
+            Debug.LogWarning("Socket already initialized! Close it first.");
+            return false;
         }
-    }
 
-    void OnDisable() {
-        CloseUDP();
+        try
+        {
+            udp = new UdpClient();
+            localEP = new IPEndPoint(IPAddress.Any, 0);
+            udp.Client.Bind(localEP);
+        } catch (System.Exception ex)
+        {
+            Debug.LogWarning("Error creating UDP client: " + ex.Message);
+            CloseUDP();
+            return false;
+        }
+        return true;
+    }
+    
+    private void CloseUDP() {
+        if (udp != null) {
+            udp.Close();
+            udp = null;
+        }
     }
 
     void Update() {
         ReceiveUDP();
     }
-
 
     private void ReceiveUDP() {
         if (udp == null) { return; }
@@ -83,15 +92,7 @@ public class UDPReceiver : MonoBehaviour
 
     private void ParseString(byte[] bytes, IPEndPoint sender) {
         string message = System.Text.Encoding.UTF8.GetString(bytes);
-        OnMessageReceive.Invoke(message, sender);
-    }
-
-    private void CloseUDP() {
-        if (udp != null) {
-            udp.Close();
-            udp = null;
-        }
-        OnMessageReceive = null;
+        OnMessageReceived.Invoke(message, sender);
     }
 
     public void SendUDPMessage(string message, IPEndPoint destination) {
@@ -113,4 +114,6 @@ public class UDPReceiver : MonoBehaviour
             Debug.LogWarning(e.Message);
         }
     }
+
+
 }

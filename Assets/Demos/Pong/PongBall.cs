@@ -35,6 +35,8 @@ public class PongBall : MonoBehaviour
       }
 
       transform.position = transform.position + (Direction * Speed * Time.deltaTime);
+
+      Debug.Log("Position actuelle du ballon : " + transform.position);
     }
 
     void OnCollisionEnter(Collision c) {

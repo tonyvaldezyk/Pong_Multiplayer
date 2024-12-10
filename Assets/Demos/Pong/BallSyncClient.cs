@@ -3,12 +3,11 @@ using UnityEngine;
 
 public class BallSyncClient : MonoBehaviour
 {
-    UDPService UDP; // Référence au service UDP
-    public GameObject Ball; // Référence explicite à l'objet balle
+    UDPService UDP;
+    public GameObject Ball;
 
     void Awake()
     {
-        // Désactive ce script si la machine actuelle est un serveur
         if (Globals.IsServer)
         {
             enabled = false;
@@ -17,19 +16,14 @@ public class BallSyncClient : MonoBehaviour
 
     void Start()
     {
-        // Récupère le service UDP dans la scène
         UDP = FindFirstObjectByType<UDPService>();
-
-        // Abonnement aux messages reçus
         UDP.OnMessageReceived += (string message, IPEndPoint sender) => {
-            if (!message.StartsWith("BALL_UPDATE")) { return; } // Vérifie le type de message
+            if (!message.StartsWith("BALL_UPDATE")) { return; }
 
             try
             {
-                // Désérialise les données JSON et met à jour la position de la balle
                 string json = message.Split('|')[1];
                 BallState state = JsonUtility.FromJson<BallState>(json);
-
                 if (Ball != null)
                 {
                     Ball.transform.position = state.Position;
@@ -42,8 +36,5 @@ public class BallSyncClient : MonoBehaviour
         };
     }
 
-    void Update()
-    {
-        // Rien à faire ici pour le moment, toute la logique est gérée via les messages reçus
-    }
+    void Update() { }
 }

@@ -10,4 +10,11 @@ public class MenuUI : MonoBehaviour
     public void StartGame() {
         SceneManager.LoadScene("Pong");
     }
+
+     public void Hide() {
+        SceneManager.LoadScene("Pong");
+    }
+
+
+
 }

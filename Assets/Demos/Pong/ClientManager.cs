@@ -4,7 +4,7 @@ using UnityEngine;
 public class ClientManager : MonoBehaviour
 {
     public UDPService UDP;
-    public string ServerIP = "127.0.0.1";
+    public string ServerIP = "192.168.190.102";
     public int ServerPort = 25000;
 
     private float NextCoucouTimeout = -1;

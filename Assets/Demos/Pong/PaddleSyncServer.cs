@@ -1,5 +1,12 @@
 using UnityEngine;
 
+[System.Serializable]
+public class PaddleState
+{
+    public int PlayerID; // ID du joueur (1 pour gauche, 2 pour droite)
+    public Vector3 Position; // Position actuelle du paddle
+}
+
 public class PaddleSyncServer : MonoBehaviour
 {
     ServerManager ServerMan;

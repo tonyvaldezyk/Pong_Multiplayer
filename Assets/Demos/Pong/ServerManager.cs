@@ -8,9 +8,10 @@ public class ServerManager : MonoBehaviour
     public int ListenPort = 25000;
 
     public Dictionary<string, IPEndPoint> Clients = new Dictionary<string, IPEndPoint>(); 
+    public Dictionary<int, Vector3> PaddlePositions = new Dictionary<int, Vector3>(); // Stocker les positions des paddles
 
     void Awake() {
-        // Desactiver mon objet si je ne suis pas le serveur
+        // Désactiver l'objet si ce n'est pas un serveur
         if (!Globals.IsServer) {
             gameObject.SetActive(false);
         }
@@ -24,22 +25,33 @@ public class ServerManager : MonoBehaviour
             (string message, IPEndPoint sender) => {
                 Debug.Log("[SERVER] Message received from " + 
                     sender.Address.ToString() + ":" + sender.Port 
-                    + " =>" + message);
-                
-                switch (message) {
-                    case "coucou":
-                        // Ajouter le client à mon dictionnaire
-                        string addr = sender.Address.ToString() + ":" + sender.Port;
-                        if (!Clients.ContainsKey(addr)) {
-                            Clients.Add(addr, sender);
-                        }
-                        Debug.Log("There are " + Clients.Count + " clients present.");
+                    + " => " + message);
 
-                        UDP.SendUDPMessage("welcome!", sender);
-                        break;
+                if (message.StartsWith("coucou"))
+                {
+                    // Ajouter le client à mon dictionnaire
+                    string addr = sender.Address.ToString() + ":" + sender.Port;
+                    if (!Clients.ContainsKey(addr)) {
+                        Clients.Add(addr, sender);
+                    }
+                    Debug.Log("There are " + Clients.Count + " clients present.");
+
+                    UDP.SendUDPMessage("welcome!", sender);
                 }
-                
-                //@todo : do something with the message that has arrived! 
+                else if (message.StartsWith("PADDLE_POSITION")) 
+                {
+                    // Traiter la position du paddle
+                    string json = message.Split('|')[1];
+                    PaddleState paddleState = JsonUtility.FromJson<PaddleState>(json);
+
+                    // Mettre à jour la position du paddle côté serveur
+                    PaddlePositions[paddleState.PlayerID] = paddleState.Position;
+
+                    // Diffuser la position mise à jour à tous les clients
+                    BroadcastUDPMessage(message);
+
+                    Debug.Log($"[SERVER] Paddle {paddleState.PlayerID} position updated: {paddleState.Position}");
+                }
             };
     }
 
@@ -47,5 +59,12 @@ public class ServerManager : MonoBehaviour
         foreach (KeyValuePair<string, IPEndPoint> client in Clients) {
             UDP.SendUDPMessage(message, client.Value);
         }
+    }
+
+    [System.Serializable]
+    public class PaddleState
+    {
+        public int PlayerID; // ID du joueur (1 pour gauche, 2 pour droite)
+        public Vector3 Position; // Position actuelle du paddle
     }
 }
